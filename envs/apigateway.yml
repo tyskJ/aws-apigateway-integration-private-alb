@@ -146,6 +146,54 @@ Resources:
             scope: !FindInMap [CognitoParams, Scope, Write]
       AllowedOAuthFlowsUserPoolClient: true
 
+  ############################################################
+  # API Gateway
+  ############################################################
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: rest-api
+      Description: Test Rest API (Any)
+      EndpointConfiguration:
+        IpAddressType: ipv4
+        Types:
+          - REGIONAL
+      ApiKeySourceType: HEADER # X-API-Key
+      DisableExecuteApiEndpoint: true
+      Policy: !Sub
+        - |
+          {
+              "Version": "2012-10-17",
+              "Statement": [
+                  {
+                      "Effect": "Allow",
+                      "Principal": "*",
+                      "Action": "execute-api:Invoke",
+                      "Resource": [
+                          "execute-api:/*"
+                      ],
+                      "Condition": {
+                          "IpAddress": {
+                              "aws:SourceIp": "0.0.0.0/0"
+                          }
+                      }
+                  }
+              ]
+          }
+      Tags:
+        - Key: Name
+          Value: rest-api
+
+  ############################################################
+  # Resource - Any Path
+  ############################################################
+  ApiResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !GetAtt RestApi.RootResourceId
+      PathPart: "{proxy+}"
+
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Outputs                                                                                       ║
 # ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
