@@ -9,19 +9,49 @@ Transform:
 # ║ Metadata                                                                                      ║
 # ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
 # ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
-# Metadata: 
+Metadata: 
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Domain Settings
+        Parameters:
+          - HostedZoneId
+          - DomainName
+      - Label:
+          default: API Gatway Settings
+        Parameters:
+          - DeploymentTrigger
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Parameters                                                                                    ║
 # ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
 # ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
-# Parameters: 
+Parameters: 
+  HostedZoneId:
+    Description: Public Hosted Zone ID
+    Type: String
+  DomainName:
+    Description: API Gateway Custom Domain Name
+    Type: String
+  DeploymentTrigger:
+    Description: Change this value to force API redeployment
+    Type: String
+    Default: v1
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Mappings                                                                                      ║
 # ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
 # ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
-# Mappings: 
+Mappings:
+  CognitoParams:
+    ResourceServerIdentifier:
+      Name: api
+    Scope:
+      Read: read
+      Write: write
+  ApiParams:
+    Stage:
+      Name: prod
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Conditions                                                                                    ║
@@ -34,6 +64,87 @@ Transform:
 # ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
 # ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
 Resources: 
+  ############################################################
+  # Cognito User Pool
+  ############################################################
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      UserPoolName: "idp"
+      ### Authentication
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+          - Name: verified_phone_number
+            Priority: 2
+      ### Settings
+      UserPoolTier: "ESSENTIALS"
+      UserPoolTags:
+        Name: "idp"
+      DeletionProtection: INACTIVE
+
+  ############################################################
+  # User Pool Domain - for Token Endpoint
+  ############################################################
+  Domain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      UserPoolId: !Ref UserPool
+      Domain: m2m-demo
+      ManagedLoginVersion: 2
+
+  ############################################################
+  # Resource Server
+  ############################################################
+  CognitoResourceServer:
+    Type: AWS::Cognito::UserPoolResourceServer
+    Properties:
+      UserPoolId: !Ref UserPool
+      Name: backend-api
+      Identifier: !FindInMap [CognitoParams, ResourceServerIdentifier, Name]
+      Scopes:
+        - ScopeName: !FindInMap [CognitoParams, Scope, Read]
+          ScopeDescription: Read access
+        - ScopeName: !FindInMap [CognitoParams, Scope, Write]
+          ScopeDescription: Write access
+
+  ############################################################
+  # App Client - m2m
+  ############################################################
+  M2mClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: "m2m-app"
+      UserPoolId: !Ref UserPool
+      AuthSessionValidity: 3
+      RefreshTokenValidity: 5
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      TokenValidityUnits:
+        RefreshToken: days
+        AccessToken: minutes
+        IdToken: minutes
+      EnableTokenRevocation: true
+      ExplicitAuthFlows:
+        - ALLOW_REFRESH_TOKEN_AUTH
+      GenerateSecret: true
+      AllowedOAuthFlows:
+        - client_credentials
+      AllowedOAuthScopes:
+        - Fn::Sub:
+          - '${identify}/${scope}'
+          - identify: !FindInMap [CognitoParams, ResourceServerIdentifier, Name]
+            scope: !FindInMap [CognitoParams, Scope, Read]
+        - Fn::Sub:
+          - '${identify}/${scope}'
+          - identify: !FindInMap [CognitoParams, ResourceServerIdentifier, Name]
+            scope: !FindInMap [CognitoParams, Scope, Write]
+      AllowedOAuthFlowsUserPoolClient: true
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Outputs                                                                                       ║
