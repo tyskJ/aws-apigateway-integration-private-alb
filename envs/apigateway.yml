@@ -303,6 +303,9 @@ Resources:
   ############################################################
   M2mClient:
     Type: AWS::Cognito::UserPoolClient
+    DependsOn:
+      - Domain
+      - CognitoResourceServer
     Properties:
       ClientName: "m2m-app"
       UserPoolId: !Ref UserPool
