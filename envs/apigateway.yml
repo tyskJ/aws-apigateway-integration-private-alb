@@ -393,6 +393,8 @@ Resources:
         IpAddressType: ipv4
         Types:
           - REGIONAL
+      SecurityPolicy: SecurityPolicy_TLS13_1_3_2025_09
+      EndpointAccessMode: STRICT # or BASIC
       ApiKeySourceType: HEADER # X-API-Key
       DisableExecuteApiEndpoint: true
       Policy:
