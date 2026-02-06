@@ -44,24 +44,49 @@ Parameters:
 # ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
 Mappings:
   VpcParams:
-    SystemVpc:
+    System:
       Name: system-vpc
       Cidr: 192.168.0.0/16
       Tenancy: default
       DnsHost: true
       DnsSupport: true
-    BastionVpc:
+    Bastion:
       Name: bastion-vpc
       Cidr: 192.255.0.0/16
       Tenancy: default
       DnsHost: true
       DnsSupport: true
+  SubnetParams:
+    SystemAlbPrivateA:
+      Name: system-alb-private-a
+      Az: a
+      Cidr: 192.168.1.0/24
+      Public: false
+      VpcName: SystemVpc
+    SystemAlbPrivateC:
+      Name: system-alb-private-c
+      Az: c
+      Cidr: 192.168.2.0/24
+      Public: false
+      VpcName: SystemVpc
+    SystemEc2PrivateA:
+      Name: system-ec2-private-a
+      Az: a
+      Cidr: 192.168.3.0/24
+      Public: false
+      VpcName: SystemVpc
+    BastionEc2PublicA:
+      Name: bastion-ec2-public-a
+      Az: a
+      Cidr: 192.255.1.0/24
+      Public: true
+      VpcName: BastionVpc
   EipParams:
-    Ec2Eip:
+    Ec2:
       Name: ec2-eip
-    NatAzaEip:
+    NatAzA:
       Name: nat-a-eip
-    NatAzcEip:
+    NatAzC:
       Name: nat-c-eip
   CognitoParams:
     ResourceServerIdentifier:
@@ -89,9 +114,9 @@ Resources:
   ############################################################ 
   "Fn::ForEach::Vpc":
     - VpcVariable
-    - - SystemVpc
-      - BastionVpc
-    - ${VpcVariable}:
+    - - System
+      - Bastion
+    - ${VpcVariable}Vpc:
         Type: AWS::EC2::VPC
         Properties:
           CidrBlock: !FindInMap [VpcParams, !Ref VpcVariable, Cidr]
@@ -105,6 +130,25 @@ Resources:
   ############################################################
   # Subnet
   ############################################################ 
+  "Fn::ForEach::Subnet":
+    - SubnetVariable
+    - - SystemAlbPrivateA
+      - SystemAlbPrivateC
+      - SystemEc2PrivateA
+      - BastionEc2PublicA
+    - ${SubnetVariable}Subnet:
+        Type: AWS::EC2::Subnet
+        Properties:
+          VpcId: !Ref
+            "Fn::FindInMap": [SubnetParams, !Ref SubnetVariable, VpcName]
+          CidrBlock: !FindInMap [SubnetParams, !Ref SubnetVariable, Cidr]
+          AvailabilityZone: !Sub
+            - "${AWS::Region}${Az}"
+            - Az: !FindInMap [SubnetParams, !Ref SubnetVariable, Az]
+          MapPublicIpOnLaunch: !FindInMap [SubnetParams, !Ref SubnetVariable, Public]
+          Tags:
+            - Key: Name
+              Value: !FindInMap [SubnetParams, !Ref SubnetVariable, Name]
 
   ############################################################
   # Network ACL
@@ -115,10 +159,10 @@ Resources:
   ############################################################ 
   "Fn::ForEach::Eip":
     - EipVariable
-    - - Ec2Eip
-      - NatAzaEip
-      - NatAzcEip
-    - ${EipVariable}:
+    - - Ec2
+      - NatAzA
+      - NatAzC
+    - ${EipVariable}Eip:
         Type: AWS::EC2::EIP
         Properties:
           Tags:
