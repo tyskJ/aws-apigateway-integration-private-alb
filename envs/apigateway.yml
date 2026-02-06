@@ -545,7 +545,19 @@ Resources:
   ############################################################
   # ACM
   ############################################################
-  
+  ApiCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref Fqdn
+      KeyAlgorithm: EC_prime256v1
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref Fqdn
+          HostedZoneId: !Ref HostedZoneId
+      Tags:
+        - Key: Name
+          Value: !Ref Fqdn
+
   ############################################################
   # Custom Domain
   ############################################################
