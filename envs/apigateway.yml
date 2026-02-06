@@ -16,7 +16,7 @@ Metadata:
           default: Domain Settings
         Parameters:
           - HostedZoneId
-          - DomainName
+          - Fqdn
       - Label:
           default: API Gatway Settings
         Parameters:
@@ -30,7 +30,7 @@ Parameters:
   HostedZoneId:
     Description: Public Hosted Zone ID
     Type: String
-  DomainName:
+  Fqdn:
     Description: API Gateway Custom Domain Name
     Type: String
   DeploymentTrigger:

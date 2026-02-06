@@ -66,7 +66,7 @@ API Gateway (REST API) のプライベート統合で ALB を直接指定可能�
   cat <<EOF > config/apigateway-parameter.yml
   Parameters:
     HostedZoneId: "パブリックホストゾーンID"
-    DomainName: "API Gatwayカスタムドメイン名"
+    Fqdn: "API Gatwayカスタムドメイン名"
     DeploymentTrigger: "v1"
   EOF
 
