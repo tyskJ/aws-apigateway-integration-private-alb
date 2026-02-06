@@ -172,6 +172,19 @@ Resources:
       RuleAction: allow
       CidrBlock: 0.0.0.0/0
 
+  "Fn::ForEach::NaclAssoc":
+    - AssocVariable
+    - - SystemAlbPrivateASubnet
+      - SystemAlbPrivateCSubnet
+      - SystemEc2PrivateASubnet
+    - ${AssocVariable}NaclAssoc:
+        Type: AWS::EC2::SubnetNetworkAclAssociation
+        Properties:
+          NetworkAclId: !Ref NaclSystem
+          SubnetId: !GetAtt
+            - !Ref AssocVariable
+            - SubnetId
+
   ############################################################
   # Elastic IP
   ############################################################ 
