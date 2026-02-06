@@ -43,6 +43,26 @@ Parameters:
 # ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
 # ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
 Mappings:
+  VpcParams:
+    SystemVpc:
+      Name: system-vpc
+      Cidr: 192.168.0.0/16
+      Tenancy: default
+      DnsHost: true
+      DnsSupport: true
+    BastionVpc:
+      Name: bastion-vpc
+      Cidr: 192.255.0.0/16
+      Tenancy: default
+      DnsHost: true
+      DnsSupport: true
+  EipParams:
+    Ec2Eip:
+      Name: ec2-eip
+    NatAzaEip:
+      Name: nat-a-eip
+    NatAzcEip:
+      Name: nat-c-eip
   CognitoParams:
     ResourceServerIdentifier:
       Name: api
@@ -63,7 +83,73 @@ Mappings:
 # ║ Resources                                                                                     ║
 # ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
 # ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
-Resources: 
+Resources:
+  ############################################################
+  # VPC
+  ############################################################ 
+  "Fn::ForEach::Vpc":
+    - VpcVariable
+    - - SystemVpc
+      - BastionVpc
+    - ${VpcVariable}:
+        Type: AWS::EC2::VPC
+        Properties:
+          CidrBlock: !FindInMap [VpcParams, !Ref VpcVariable, Cidr]
+          EnableDnsHostnames: !FindInMap [VpcParams, !Ref VpcVariable, DnsHost]
+          EnableDnsSupport: !FindInMap [VpcParams, !Ref VpcVariable, DnsSupport]
+          InstanceTenancy: !FindInMap [VpcParams, !Ref VpcVariable, Tenancy]
+          Tags:
+            - Key: Name
+              Value: !FindInMap [VpcParams, !Ref VpcVariable, Name]
+
+  ############################################################
+  # Subnet
+  ############################################################ 
+
+  ############################################################
+  # Network ACL
+  ############################################################ 
+
+  ############################################################
+  # Elastic IP
+  ############################################################ 
+  "Fn::ForEach::Eip":
+    - EipVariable
+    - - Ec2Eip
+      - NatAzaEip
+      - NatAzcEip
+    - ${EipVariable}:
+        Type: AWS::EC2::EIP
+        Properties:
+          Tags:
+            - Key: Name
+              Value: !FindInMap [EipParams, !Ref EipVariable, Name]
+
+  ############################################################
+  # Internet Gateway
+  ############################################################ 
+
+  ############################################################
+  # NAT Gatway - Regional
+  ############################################################ 
+
+  ############################################################
+  # Route Table
+  ############################################################ 
+
+  ############################################################
+  # KeyPair
+  ############################################################ 
+  KeyPair:
+    Type: AWS::EC2::KeyPair
+    Properties:
+      KeyName: bastion-keypair
+      KeyType: ed25519
+      KeyFormat: pem
+      Tags:
+        - Key: Name
+          Value: bastion-keypair
+
   ############################################################
   # Cognito User Pool
   ############################################################
