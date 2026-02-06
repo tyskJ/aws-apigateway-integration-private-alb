@@ -21,6 +21,10 @@ Metadata:
           default: API Gatway Settings
         Parameters:
           - DeploymentTrigger
+      - Label:
+          default: Access Source IP CIDR List
+        Parameters:
+          - AccessIp
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Parameters                                                                                    ║
@@ -37,6 +41,9 @@ Parameters:
     Description: Change this value to force API redeployment
     Type: String
     Default: v1
+  AccessIp:
+    Description: Restrict Access IP
+    Type: CommaDelimitedList
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Mappings                                                                                      ║
@@ -335,27 +342,23 @@ Resources:
           - REGIONAL
       ApiKeySourceType: HEADER # X-API-Key
       DisableExecuteApiEndpoint: true
-      Policy: !Sub
-        - |
-          {
-              "Version": "2012-10-17",
-              "Statement": [
-                  {
-                      "Effect": "Allow",
-                      "Principal": "*",
-                      "Action": "execute-api:Invoke",
-                      "Resource": [
-                          "execute-api:/*"
-                      ],
-                      "Condition": {
-                          "IpAddress": {
-                              "aws:SourceIp": "${sourceIp}"
-                          }
-                      }
-                  }
-              ]
-          }
-        - sourceIp: !Sub "${Ec2Eip}/32"
+      Policy:
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": "*",
+              "Action": "execute-api:Invoke",
+              "Resource": ["execute-api:/*"],
+              "Condition": {
+                "IpAddress": {
+                  "aws:SourceIp": !Ref AccessIp
+                }
+              }
+            }
+          ]
+        }
       Tags:
         - Key: Name
           Value: rest-api
