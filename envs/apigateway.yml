@@ -444,6 +444,22 @@ Resources:
             scope: !FindInMap [CognitoParams, Scope, Write]
       AllowedOAuthFlowsUserPoolClient: true
 
+
+  ############################################################
+  # VPC Link V2
+  ############################################################
+  VpcLinkV2:
+    Type: AWS::ApiGatewayV2::VpcLink
+    Properties:
+      Name: vpc-link-v2
+      SubnetIds:
+        - !Ref SystemAlbPrivateASubnet
+        - !Ref SystemAlbPrivateCSubnet
+      SecurityGroupIds:
+        - !Ref VpcLinkSg
+      Tags:
+        Name: vpc-link-v2
+
   ############################################################
   # API Gateway
   ############################################################
