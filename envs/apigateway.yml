@@ -229,6 +229,46 @@ Resources:
   ############################################################
   # Route Table
   ############################################################ 
+  SystemAlbSubnetRtb:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref SystemVpc
+      Tags:
+        - Key: Name
+          Value: alb-subnet-rtb
+
+  AlbRtbAssocPrivateA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref SystemAlbSubnetRtb
+      SubnetId: !Ref SystemAlbPrivateASubnet
+
+  AlbRtbAssocPrivateC:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref SystemAlbSubnetRtb
+      SubnetId: !Ref SystemAlbPrivateCSubnet  
+
+  SystemEc2SubnetRtb:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref SystemVpc
+      Tags:
+        - Key: Name
+          Value: ec2-subnet-rtb
+  
+  SystemEc2SubnetRtbRouteNgw:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref SystemEc2SubnetRtb
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref RegionalNat
+
+  Ec2RtbAssocPrivateA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref SystemEc2SubnetRtb
+      SubnetId: !Ref SystemEc2PrivateASubnet
 
   ############################################################
   # KeyPair
