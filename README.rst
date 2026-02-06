@@ -134,3 +134,4 @@ API Gateway (REST API) のプライベート統合で ALB を直接指定可能�
 * `CDKでの aws_apigateway と aws_apigatewayv2 の違い - Zenn <https://zenn.dev/iret/articles/03af759a62f855>`_
 * `API GatewayをCloudFormationで構築したら、マネコンとの項目の関連がわからなすぎたので、二度と調べなくていいようにまとめました - DevelopersIO <https://dev.classmethod.jp/articles/put-together-about-the-relationship-between-cfn-and-management-console-items/>`_
 * `【API Gateway】Cognitoオーソライザーを使ったM2M認証でAPIを保護する <https://persol-serverworks.co.jp/blog/api-gateway/api-gatewaycognitom2m.html>`_
+* `[アップデート] REST APIのAPI Gatewayのプライベート統合でALBを直接指定できるようになりました <https://dev.classmethod.jp/articles/api-gateway-rest-apis-integration-load-balancer/>`_
