@@ -321,11 +321,11 @@ Resources:
       AllowedOAuthFlows:
         - client_credentials
       AllowedOAuthScopes:
-        - Fn::Sub:
+        - !Sub
           - '${identify}/${scope}'
           - identify: !FindInMap [CognitoParams, ResourceServerIdentifier, Name]
             scope: !FindInMap [CognitoParams, Scope, Read]
-        - Fn::Sub:
+        - !Sub
           - '${identify}/${scope}'
           - identify: !FindInMap [CognitoParams, ResourceServerIdentifier, Name]
             scope: !FindInMap [CognitoParams, Scope, Write]
@@ -359,12 +359,13 @@ Resources:
                       ],
                       "Condition": {
                           "IpAddress": {
-                              "aws:SourceIp": "0.0.0.0/0"
+                              "aws:SourceIp": "${sourceIp}"
                           }
                       }
                   }
               ]
           }
+        - sourceIp: !Sub "${Ec2Eip}/32"
       Tags:
         - Key: Name
           Value: rest-api
