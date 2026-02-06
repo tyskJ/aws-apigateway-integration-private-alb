@@ -81,6 +81,16 @@ Mappings:
       Name: nat-a-eip
     NatAzC:
       Name: nat-c-eip
+  SgParams:
+    Alb:
+      Name: alb-sg
+      Description: For ALB SG
+    Ec2:
+      Name: ec2-sg
+      Description: For EC2 SG
+    VpcLink:
+      Name: vpc-link-sg
+      Description: For VPC Link SG
   CognitoParams:
     ResourceServerIdentifier:
       Name: api
@@ -295,6 +305,59 @@ Resources:
       Tags:
         - Key: Name
           Value: bastion-keypair
+
+  ############################################################
+  # Security Group
+  ############################################################ 
+  "Fn::ForEach::SecurityGroup":
+    - SgVariable
+    - - Alb
+      - Ec2
+      - VpcLink
+    - ${SgVariable}Sg:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+          VpcId: !Ref SystemVpc
+          GroupName: !FindInMap [SgParams, !Ref SgVariable, Name]
+          GroupDescription: !FindInMap [SgParams, !Ref SgVariable, Description]
+          Tags:
+            - Key: Name
+              Value: !FindInMap [SgParams, !Ref SgVariable, Name]
+
+  "Fn::ForEach::SgEgressAllAllow":
+    - SgVariable
+    - - AlbSg
+      - Ec2Sg
+      - VpcLinkSg
+    - ${SgVariable}EgressAllAllow:
+        Type: AWS::EC2::SecurityGroupEgress
+        Properties:
+          IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+          Description: "Unrestricted"
+          GroupId: !GetAtt 
+            - !Ref SgVariable
+            - GroupId
+
+  AlbSgIngressHttp:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: "tcp"
+      SourceSecurityGroupId: !Ref VpcLinkSg
+      FromPort: 80
+      ToPort: 80
+      Description: "Allow HTTP From VPC Link SG"
+      GroupId: !Ref AlbSg
+
+  Ec2SgIngressHttp:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: "tcp"
+      SourceSecurityGroupId: !Ref AlbSg
+      FromPort: 80
+      ToPort: 80
+      Description: "Allow HTTP From ALB SG"
+      GroupId: !Ref Ec2Sg
 
   ############################################################
   # Cognito User Pool
