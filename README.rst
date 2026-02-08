@@ -68,8 +68,24 @@ API Gateway (REST API) のプライベート統合で ALB を直接指定可能�
     HostedZoneId: パブリックホストゾーンID
     Fqdn: APIGatwayカスタムドメイン名
     DeploymentTrigger: v1
+    StageVersion: V1
     AccessIp: 接続元IPアドレス(CIDR形式)
   EOF
+
+.. note::
+
+  * `DeploymentTrigger` は以下のように追加していくこと
+  * 追加する毎にデプロイされていく
+
+.. code-block::
+
+  DeploymentTrigger: V1,
+    V2,
+    V3
+
+.. note::
+
+  * `StageVersion` はステージに紐づけるデプロイのバージョンとすること
 
 .. note::
 
@@ -109,8 +125,8 @@ API Gateway (REST API) のプライベート統合で ALB を直接指定可能�
 
 .. warning::
 
-  * 初回削除時に、ACMの削除に失敗します
-  * そのため、何度か削除コマンドを実行してください
+  * 初回削除時に、ACMの削除に失敗する場合があります
+  * その際は、何度か削除コマンドを実行してください
 
 2. デプロイ用バケット削除
 ---------------------------------------------------------------------
